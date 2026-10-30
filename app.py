@@ -70,20 +70,23 @@ def delete(post_id):
 @app.route("/update/<int:post_id>", methods=["GET", "POST"])
 def update(post_id):
     posts = load_posts()
-    post = fetch_post_by_id(post_id)
+
+    # find the post inside the list
+    post = None
+    for p in posts:
+        if p["id"] == post_id:
+            post = p
+            break
 
     if post is None:
         return "Post not found", 404
 
     if request.method == "POST":
-        # Update fields
         post["author"] = request.form.get("author")
         post["title"] = request.form.get("title")
         post["content"] = request.form.get("content")
 
-        # Save updated list
         save_posts(posts)
-
         return redirect(url_for("index"))
 
     return render_template("update.html", post=post)
