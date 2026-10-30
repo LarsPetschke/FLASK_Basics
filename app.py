@@ -18,6 +18,15 @@ def save_posts(posts):
         json.dump(posts, f, indent=4)
 
 
+def fetch_post_by_id(post_id):
+    """Return a single post by ID."""
+    posts = load_posts()
+    for post in posts:
+        if post["id"] == post_id:
+            return post
+    return None
+
+
 @app.route("/")
 def index():
     posts = load_posts()
@@ -33,7 +42,6 @@ def add():
         title = request.form.get("title")
         content = request.form.get("content")
 
-        # Generate new ID
         new_id = max(post["id"] for post in posts) + 1 if posts else 1
 
         new_post = {
@@ -54,13 +62,31 @@ def add():
 @app.route("/delete/<int:post_id>")
 def delete(post_id):
     posts = load_posts()
-
-    # Filter out the post with the given ID
     posts = [post for post in posts if post["id"] != post_id]
-
     save_posts(posts)
-
     return redirect(url_for("index"))
+
+
+@app.route("/update/<int:post_id>", methods=["GET", "POST"])
+def update(post_id):
+    posts = load_posts()
+    post = fetch_post_by_id(post_id)
+
+    if post is None:
+        return "Post not found", 404
+
+    if request.method == "POST":
+        # Update fields
+        post["author"] = request.form.get("author")
+        post["title"] = request.form.get("title")
+        post["content"] = request.form.get("content")
+
+        # Save updated list
+        save_posts(posts)
+
+        return redirect(url_for("index"))
+
+    return render_template("update.html", post=post)
 
 
 if __name__ == "__main__":
